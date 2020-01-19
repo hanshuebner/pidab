@@ -10,7 +10,11 @@ using namespace std;
 int
 main(int argc, char* argv[])
 {
-  Oceanus::Radio radio("/dev/tty.usbmodem141101");
+  if (argc != 2) {
+    throw invalid_argument("Missing command line argument, expecting serial device name");
+  }
+
+  Oceanus::Radio radio(argv[1]);
 
   radio.send_command(Oceanus::STREAM, Oceanus::STREAM_SetVolume, { 16 });
   radio.send_command(Oceanus::STREAM, Oceanus::STREAM_SetStereoMode, { 1 });

@@ -78,6 +78,9 @@ Radio::wait_for_readiness()
       break;
     }
     catch (radio_timeout& timeout) {
+      if (!retries) {
+        throw logic_error("No response from radio");
+      }
       usleep(100000);
     }
   }

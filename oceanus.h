@@ -56,9 +56,9 @@ enum STREAM_Command {
   STREAM_GetHeadroom         = 0x29,
   STREAM_SetSorter           = 0x2A,
   STREAM_GetSorter           = 0x2B,
-  STREAM_GetProgrameType     = 0x2C,
-  STREAM_GetProgrameName     = 0x2D,
-  STREAM_GetProgrameText     = 0x2E,
+  STREAM_GetProgramType      = 0x2C,
+  STREAM_GetProgramName      = 0x2D,
+  STREAM_GetProgramText      = 0x2E,
   STREAM_SetAnnouncement     = 0x2F,
   STREAM_GetAnnouncementSet  = 0x30,
   STREAM_GetServCompType     = 0x40,
@@ -70,7 +70,7 @@ enum STREAM_Command {
   STREAM_GetFrequency        = 0x46,
   STREAM_GetDataRate         = 0x47,
   STREAM_GetSignalQuality    = 0x48,
-  STREAM_ProgrameInfo        = 0x49,
+  STREAM_ProgramInfo         = 0x49,
   STREAM_DirectTuneProgram   = 0x4A,
   STREAM_GetECC              = 0x4B,
   STREAM_SetDRC              = 0x4C,
@@ -121,6 +121,7 @@ public:
   const unsigned length() const { return _length; }
   const bool is_valid() const;
   const uint8_t sequence_number() const { return _buffer[3]; }
+  const uint8_t* payload() const { return _buffer + 6; }
   const unsigned payload_length() const { return _length - 7; }
   void validate();
 
@@ -162,6 +163,8 @@ private:
 
   const string _port;
   int _fd;
+
+  ostream& _debug;
 
   void open_port();
   void wait_for_readiness();

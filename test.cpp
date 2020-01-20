@@ -2,6 +2,7 @@
 #include <oceanus.h>
 
 #include <iostream>
+#include <iomanip>
 
 #include <unistd.h>
 
@@ -27,8 +28,46 @@ main(int argc, char* argv[])
 #endif
   radio.send_command(Oceanus::STREAM, Oceanus::STREAM_Play,
                      { 0, 0, 0, 0, 42 });
+  string playstatus = "";
   while (true) {
-    radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetPlayStatus);
+    auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetPlayStatus);
+    auto payload = response->payload();
+    string new_playstatus = "unknown";
+    switch (payload[0]) {
+    case 0: new_playstatus = "playing"; break;
+    case 1: new_playstatus = "searching"; break;
+    case 2: new_playstatus = "tuning"; break;
+    case 3: new_playstatus = "stop"; break;
+    }
+    if (new_playstatus != playstatus) {
+      cout << "Play Status: " << new_playstatus << endl;
+      playstatus = new_playstatus;
+    }
+    if (payload[2] & 0x01) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetProgramName);
+    }
+    if (payload[2] & 0x02) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetProgramText);
+    }
+    if (payload[2] & 0x04) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetDLSCmd);
+    }
+    if (payload[2] & 0x08) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetStereo);
+    }
+    if (payload[2] & 0x10) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetServiceName);
+    }
+    if (payload[2] & 0x20) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetSorter);
+    }
+    if (payload[2] & 0x40) {
+      auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetFrequency);
+    }
+    if (payload[2] & 0x80) {
+      auto response = radio.send_command(Oceanus::RTC, Oceanus::RTC_GetClock);
+    }
+    
     usleep(100000);
   }
 }

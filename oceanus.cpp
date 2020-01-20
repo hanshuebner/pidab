@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include <magic_enum.hpp>
+#include <nullstream.h>
 
 namespace Oceanus {
 
@@ -25,9 +26,12 @@ hexdump(ostream& os, const uint8_t* p, unsigned length) {
   }
 }
 
+static nullstream null;
+
 Radio::Radio(const char* const port)
   : _port(port),
-    _fd(-1)
+    _fd(-1),
+    _debug(null)
 {
   open_port();
   wait_for_readiness();
@@ -49,14 +53,13 @@ Radio::open_port()
     throw invalid_argument((string) "Cannot open serial port: " + _port + " - " + strerror(errno));
   }
 
-  fcntl(_fd, F_SETFL, 0);
-
   struct termios options;
 
   cfmakeraw(&options);
   cfsetispeed(&options, B115200);
   cfsetospeed(&options, B115200);
   options.c_lflag = options.c_iflag = options.c_oflag = 0;
+  options.c_cflag = CREAD | CS8 | CLOCAL;
   options.c_cc[VMIN] = 0;
   options.c_cc[VTIME] = 1;
 
@@ -141,13 +144,18 @@ Radio::send_command(CommandType command_type, uint8_t command, const vector<uint
 {
   Request request(command_type, command, arguments);
 
-  cout << request;
+  _debug << request;
 #ifdef DUMP_PACKETS
-  hexdump(cout, request.buffer(), request.length());
+  hexdump(_debug, request.buffer(), request.length());
 #endif
-  cout << endl;
+  _debug << endl;
 
+ retry:
   if (write(_fd, request.buffer(), request.length()) != request.length()) {
+    if (errno == EAGAIN) {
+      _debug << "retry" << endl;
+      goto retry;
+    }
     throw system_error(errno, generic_category(), "Could not write to serial port");
   }
 
@@ -158,13 +166,13 @@ Radio::send_command(CommandType command_type, uint8_t command, const vector<uint
   }
 
   if (response) {
-    cout << *response;
+    _debug << *response;
 #ifdef DUMP_PACKETS
-    hexdump(cout, response->buffer(), response->length());
+    hexdump(_debug, response->buffer(), response->length());
 #endif
-    cout << endl;
+    _debug << endl;
   } else {
-    cout << "No response" << endl;
+    _debug << "No response" << endl;
   }
 
   return response;

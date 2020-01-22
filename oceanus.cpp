@@ -131,7 +131,7 @@ Radio::read_response()
 
   read(buffer, 6);
   if (buffer[0] != 0xfe) {
-    return nullptr;
+    throw logic_error("Radio response does not start with 0xFE");
   }
   unsigned length = (buffer[4] << 8) | buffer[5];
   read(buffer + 6, length + 1);

@@ -67,7 +67,7 @@ main(int argc, char* argv[])
     if (payload[2] & 0x80) {
       auto response = radio.send_command(Oceanus::RTC, Oceanus::RTC_GetClock);
     }
-    
+
     usleep(100000);
   }
 }

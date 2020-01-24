@@ -44,27 +44,35 @@ main(int argc, char* argv[])
       playstatus = new_playstatus;
     }
     if (payload[2] & 0x01) {
+      cout << "STREAM_GetProgramName" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetProgramName);
     }
     if (payload[2] & 0x02) {
+      cout << "STREAM_GetProgramText" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetProgramText);
     }
     if (payload[2] & 0x04) {
+      cout << "STREAM_GetDLSCmd" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetDLSCmd);
     }
     if (payload[2] & 0x08) {
+      cout << "STREAM_GetStereo" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetStereo);
     }
     if (payload[2] & 0x10) {
+      cout << "STREAM_GetServiceName" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetServiceName);
     }
     if (payload[2] & 0x20) {
+      cout << "STREAM_GetSorter" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetSorter);
     }
     if (payload[2] & 0x40) {
+      cout << "STREAM_GetFrequency" << endl;
       auto response = radio.send_command(Oceanus::STREAM, Oceanus::STREAM_GetFrequency);
     }
     if (payload[2] & 0x80) {
+      cout << "RTC_GetClock" << endl;
       auto response = radio.send_command(Oceanus::RTC, Oceanus::RTC_GetClock);
     }
 

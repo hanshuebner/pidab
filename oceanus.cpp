@@ -195,7 +195,7 @@ Packet::validate()
   unsigned length = (_buffer[4] << 8) | _buffer[5];
 
   if (length > max_payload) {
-    throw logic_error("Response packet length too large");  // fixme better exception
+    throw logic_error("Response packet too long");  // fixme better exception
   }
 
   _length = length + 7;

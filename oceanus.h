@@ -115,7 +115,7 @@ enum GPIO_Command {
 class Packet
 {
 public:
-  static const int max_payload = 0x101;
+  static const int max_payload = 0xF000;
 
   const uint8_t* buffer() const { return _buffer; }
   const unsigned length() const { return _length; }

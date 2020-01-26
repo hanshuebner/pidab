@@ -117,12 +117,16 @@ class Packet
 public:
   static const int max_payload = 0xF000;
 
+  const uint8_t command_type() const { return _buffer[1]; };
+  const uint8_t command() const { return _buffer[2]; };
+  const uint8_t sequence_number() const { return _buffer[3]; }
+  const unsigned payload_length() const { return _length - 7; }
+  const uint8_t* payload() const { return _buffer + 6; }
+
   const uint8_t* buffer() const { return _buffer; }
   const unsigned length() const { return _length; }
+
   const bool is_valid() const;
-  const uint8_t sequence_number() const { return _buffer[3]; }
-  const uint8_t* payload() const { return _buffer + 6; }
-  const unsigned payload_length() const { return _length - 7; }
   void validate();
 
 protected:
@@ -155,7 +159,32 @@ public:
   Radio(const char* const port);
   ~Radio();
 
-  shared_ptr<Response> send_command(CommandType command_type, uint8_t command, const vector<uint8_t>& arguments = {});
+  void set_volume(uint8_t volume);
+
+  enum StereoMode {
+    FORCE_MONO         = 0,
+    AUTO_DETECT_STEREO = 1
+  };
+  void set_stereo_mode(StereoMode mode);
+
+  void play_fm(float frequency);
+  void play_dab(unsigned program_index);
+  void play_i2sin();
+  void play_single_tone(unsigned khz);
+  void play_noise();
+  void play_linein_1();
+  void play_linein_2();
+
+  void handle_status();
+  void handle_mot();
+
+  enum PlayStatus {
+    Playing   = 0,
+    Searching = 1,
+    Tuning    = 2,
+    Stop      = 3
+  };
+  PlayStatus get_play_status() const { return _play_status; }
 
 private:
   const unsigned _radio_timeout = 500;
@@ -166,13 +195,28 @@ private:
 
   ostream& _debug;
 
+  PlayStatus _play_status;
+
   void open_port();
   void wait_for_readiness();
   void close_port();
 
   void read(uint8_t* buffer, const unsigned length);
 
+  shared_ptr<Response> send_command(CommandType command_type, uint8_t command, const vector<uint8_t>& arguments = {});
   shared_ptr<Response> read_response();
+
+  enum StreamPlayMode {
+    DAB         = 0x00,
+    FM          = 0x01,
+    I2SIN       = 0x02,
+    SINGLE_TONE = 0x04,
+    NOISE       = 0x05,
+    LINEIN_1    = 0x06,
+    LINEIN_2    = 0x07
+  };
+
+  void play_stream(StreamPlayMode mode, uint32_t arg);
 
   class radio_timeout
     : public exception

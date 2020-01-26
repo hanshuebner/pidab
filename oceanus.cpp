@@ -11,6 +11,7 @@
 #include <termios.h>
 #include <errno.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <magic_enum.hpp>
 #include <nullstream.h>
@@ -256,6 +257,123 @@ ostream& operator<<(ostream& os, const Packet& packet)
     os << "]";
   }
   return os;
+}
+
+void
+Radio::set_volume(uint8_t volume)
+{
+  send_command(Oceanus::STREAM, Oceanus::STREAM_SetVolume, { volume });
+}
+
+void
+Radio::set_stereo_mode(StereoMode mode)
+{
+  send_command(Oceanus::STREAM, Oceanus::STREAM_SetStereoMode, { (uint8_t) mode });
+}
+
+void
+Radio::play_stream(StreamPlayMode mode, uint32_t arg)
+{
+    send_command(STREAM, STREAM_Play,
+                       { (uint8_t) mode,
+                           (uint8_t) (arg >> 24), (uint8_t) ((arg >> 16) & 0xff),
+                           (uint8_t) ((arg >> 8) & 0xff), (uint8_t) (arg & 0xff)});
+}
+
+void
+Radio::play_dab(unsigned program_index)
+{
+  play_stream(DAB, program_index);
+}
+
+void
+Radio::play_fm(float input_frequency)
+{
+  unsigned frequency = floor(input_frequency * 1000.0);
+  play_stream(FM, frequency);
+}
+
+void
+Radio::play_i2sin()
+{
+  play_stream(I2SIN, 0);
+}
+
+void
+Radio::play_single_tone(unsigned khz)
+{
+  play_stream(SINGLE_TONE, khz);
+}
+
+void
+Radio::play_noise()
+{
+  play_stream(NOISE, 0);
+}
+
+void
+Radio::play_linein_1()
+{
+  play_stream(LINEIN_1, 0);
+}
+
+void
+Radio::play_linein_2()
+{
+  play_stream(LINEIN_2, 0);
+}
+
+void
+Radio::handle_status()
+{
+  auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetPlayStatus);
+  auto payload = response->payload();
+  PlayStatus play_status = static_cast<PlayStatus>(payload[0]);
+  if (play_status != _play_status) {
+    cout << "Play Status: " << string(magic_enum::enum_name(play_status)) << endl;
+    _play_status = play_status;
+  }
+  if (payload[2] & 0x01) {
+    cout << "STREAM_GetProgramName" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetProgramName);
+  }
+  if (payload[2] & 0x02) {
+    cout << "STREAM_GetProgramText" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetProgramText);
+  }
+  if (payload[2] & 0x04) {
+    cout << "STREAM_GetDLSCmd" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetDLSCmd);
+  }
+  if (payload[2] & 0x08) {
+    cout << "STREAM_GetStereo" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetStereo);
+  }
+  if (payload[2] & 0x10) {
+    cout << "STREAM_GetServiceName" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetServiceName);
+  }
+  if (payload[2] & 0x20) {
+    cout << "STREAM_GetSorter" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetSorter);
+  }
+  if (payload[2] & 0x40) {
+    cout << "STREAM_GetFrequency" << endl;
+    auto response = send_command(Oceanus::STREAM, Oceanus::STREAM_GetFrequency);
+  }
+  if (payload[2] & 0x80) {
+    cout << "RTC_GetClock" << endl;
+    auto response = send_command(Oceanus::RTC, Oceanus::RTC_GetClock);
+  }
+}
+
+void
+Radio::handle_mot()
+{
+  auto response = send_command(Oceanus::MOT, Oceanus::MOT_GetAppData);
+  if (response->command_type() != 0x00 || response->command() != 0x02) {
+    cout << "MOT_GetAppData response: " << *response << endl;
+  }
 }
 
 };

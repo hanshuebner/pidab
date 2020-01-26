@@ -161,6 +161,14 @@ public:
   Radio(const char* const port);
   ~Radio();
 
+  enum ResetMode {
+    REBOOT                    = 0x00,
+    CLEAR_DATABASE_AND_REBOOT = 0x01,
+    CLEAR_DATABASE            = 0x02
+  };
+  void reset(ResetMode mode);
+  void auto_search(unsigned first_index, unsigned last_index);
+
   void set_volume(uint8_t volume);
 
   enum StereoMode {

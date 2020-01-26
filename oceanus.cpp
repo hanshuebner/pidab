@@ -276,6 +276,18 @@ Radio::convert_string(const uint8_t* p, unsigned length)
 }
 
 void
+Radio::reset(ResetMode mode)
+{
+  send_command(SYSTEM, SYSTEM_Reset, { (uint8_t) mode });
+}
+
+void
+Radio::auto_search(unsigned first_index, unsigned last_index)
+{
+  send_command(STREAM, STREAM_AutoSearch, { (uint8_t) first_index, (uint8_t) last_index });
+}
+
+void
 Radio::set_volume(uint8_t volume)
 {
   send_command(STREAM, STREAM_SetVolume, { volume });

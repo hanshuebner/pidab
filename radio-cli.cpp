@@ -48,6 +48,8 @@ private:
   // Commands
   void dab(vector<string>);
   void fm(vector<string>);
+  void volume(vector<string>);
+  void scan(vector<string>);
 };
 
 RadioCLI::RadioCLI(const char* device_name)
@@ -55,8 +57,10 @@ RadioCLI::RadioCLI(const char* device_name)
 {
   _command_handlers["dab"] = &RadioCLI::dab;
   _command_handlers["fm"] = &RadioCLI::fm;
+  _command_handlers["volume"] = &RadioCLI::volume;
+  _command_handlers["scan"] = &RadioCLI::scan;
 
-  _radio.set_volume(16);
+  _radio.set_volume(10);
   _radio.set_stereo_mode(Oceanus::Radio::AUTO_DETECT_STEREO);
 
   _radio.play_dab(42);
@@ -106,6 +110,22 @@ RadioCLI::fm(vector<string> args)
   unsigned frequency = stof(args.at(0));
 
   _radio.play_fm(frequency);
+}
+
+
+void
+RadioCLI::volume(vector<string> args)
+{
+  unsigned volume = stoul(args.at(0));
+
+  _radio.set_volume(volume);
+}
+
+void
+RadioCLI::scan(vector<string>)
+{
+  _radio.reset(Oceanus::Radio::CLEAR_DATABASE);
+  _radio.auto_search(0, 80);
 }
 
 void

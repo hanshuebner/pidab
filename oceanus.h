@@ -168,6 +168,8 @@ public:
   };
   void reset(ResetMode mode);
   void auto_search(unsigned first_index, unsigned last_index);
+  vector<string> _programs;
+  void get_programs();
 
   void set_volume(uint8_t volume);
 

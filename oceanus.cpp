@@ -288,6 +288,25 @@ Radio::auto_search(unsigned first_index, unsigned last_index)
 }
 
 void
+Radio::get_programs()
+{
+  auto response = send_command(STREAM, STREAM_GetTotalProgram);
+  auto payload = response->payload();
+  uint32_t count = payload[0] << 24 | payload[1] << 16 | payload[2] << 8 | payload[3];
+  _programs.clear();
+  _programs.resize(count, "");
+  for (uint32_t i = 0; i < count; i++) {
+    auto response = send_command(STREAM, STREAM_GetProgramName,
+                                 {
+                                   (uint8_t) ((i >> 24) & 0xff),
+                                     (uint8_t) ((i >> 16) & 0xff),
+                                     (uint8_t) ((i >> 8) & 0xff),
+                                     (uint8_t) (i & 0xff) });
+    _programs[i] = convert_string(response->payload(), response->payload_length());
+  }
+}
+
+void
 Radio::set_volume(uint8_t volume)
 {
   send_command(STREAM, STREAM_SetVolume, { volume });

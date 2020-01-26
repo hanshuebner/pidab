@@ -64,6 +64,8 @@ RadioCLI::RadioCLI(const char* device_name)
   _radio.set_stereo_mode(Oceanus::Radio::AUTO_DETECT_STEREO);
 
   _radio.play_dab(42);
+
+  _radio.get_programs();
 }
 
 bool
@@ -112,7 +114,6 @@ RadioCLI::fm(vector<string> args)
   _radio.play_fm(frequency);
 }
 
-
 void
 RadioCLI::volume(vector<string> args)
 {
@@ -125,7 +126,8 @@ void
 RadioCLI::scan(vector<string>)
 {
   _radio.reset(Oceanus::Radio::CLEAR_DATABASE);
-  _radio.auto_search(0, 80);
+  _radio.auto_search(0, 200);
+  _radio.get_programs();
 }
 
 void

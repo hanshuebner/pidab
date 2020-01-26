@@ -4,6 +4,8 @@
 
 #include <string>
 #include <vector>
+#include <locale>
+#include <codecvt>
 
 using namespace std;
 
@@ -178,6 +180,11 @@ public:
   void handle_status();
   void handle_mot();
 
+  void show_status();
+
+  wstring_convert<codecvt_utf8<wchar_t>> _wchar_to_utf8;
+  string convert_string(const uint8_t* buf, unsigned length);
+
   enum PlayStatus {
     Playing   = 0,
     Searching = 1,
@@ -196,6 +203,8 @@ private:
   ostream& _debug;
 
   PlayStatus _play_status;
+  string _program_name;
+  string _program_text;
 
   void open_port();
   void wait_for_readiness();

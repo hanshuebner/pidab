@@ -22,9 +22,12 @@ uint8_t Request::_sequence_number = 0;
 
 static void
 hexdump(ostream& os, const uint8_t* p, unsigned length) {
+  ios_base::fmtflags f(os.flags());
+  os << setbase(16);
   for (int i = 0; i < length; i++) {
-    os << ' ' << setbase(16) << setw(2) << setfill('0') << (unsigned) p[i];
+    os  << ' ' << setw(2) << setfill('0') << (unsigned) p[i];
   }
+  os.flags(f);
 }
 
 static nullstream null;
@@ -248,7 +251,7 @@ ostream& operator<<(ostream& os, const Packet& packet)
   int status;
   os << "[" << abi::__cxa_demangle(typeid(packet).name(), 0, 0, &status) << " ";
   if (packet.is_valid()) {
-    os << command_name(buffer[1], buffer[2]) << " " << packet.payload_length();
+    os << command_name(buffer[1], buffer[2]) << " [" << packet.payload_length() << "]";
     hexdump(os, packet.buffer() + 6, packet.payload_length());
     os << "]";
   } else {
@@ -257,6 +260,19 @@ ostream& operator<<(ostream& os, const Packet& packet)
     os << "]";
   }
   return os;
+}
+
+string
+Radio::convert_string(const uint8_t* p, unsigned length)
+{
+  unsigned nchars = length / 2;
+  wchar_t buf[nchars + 1];
+
+  for (int i = 0; i < length; i += 2) {
+    buf[i / 2] = p[i] << 8 | p[i + 1];
+  }
+  buf[nchars] = 0;
+  return _wchar_to_utf8.to_bytes(buf);
 }
 
 void
@@ -324,22 +340,45 @@ Radio::play_linein_2()
 }
 
 void
+Radio::show_status()
+{
+  cout << "Play Status: " << string(magic_enum::enum_name(_play_status)) << endl;
+  if (_program_name.length()) {
+    cout << "Program Name: " << _program_name << endl;
+  }
+  if (_program_name.length()) {
+    cout << "Program Text: " << _program_text << endl;
+  }
+}
+
+void
 Radio::handle_status()
 {
   auto response = send_command(STREAM, STREAM_GetPlayStatus);
   auto payload = response->payload();
   PlayStatus play_status = static_cast<PlayStatus>(payload[0]);
   if (play_status != _play_status) {
-    cout << "Play Status: " << string(magic_enum::enum_name(play_status)) << endl;
     _play_status = play_status;
+    show_status();
   }
   if (payload[2] & 0x01) {
-    cout << "STREAM_GetProgramName" << endl;
     auto response = send_command(STREAM, STREAM_GetProgramName);
+    if (response->command() == STREAM_GetProgramName) {
+      _program_name = convert_string(response->payload(), response->payload_length());
+      show_status();
+    } else {
+      cout << "Cannot get program name, error code " << (unsigned) response->payload()[0];
+    }
   }
   if (payload[2] & 0x02) {
-    cout << "STREAM_GetProgramText" << endl;
     auto response = send_command(STREAM, STREAM_GetProgramText);
+    if (response->command() == STREAM_GetProgramText) {
+      cout << "Response: " << *response << endl;
+      _program_text = convert_string(response->payload(), response->payload_length());
+      show_status();
+    } else {
+      cout << "Cannot get program text, error code " << (unsigned) response->payload()[0];
+    }
   }
   if (payload[2] & 0x04) {
     cout << "STREAM_GetDLSCmd" << endl;

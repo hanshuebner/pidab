@@ -290,10 +290,10 @@ Radio::set_stereo_mode(StereoMode mode)
 void
 Radio::play_stream(StreamPlayMode mode, uint32_t arg)
 {
-    send_command(STREAM, STREAM_Play,
-                       { (uint8_t) mode,
-                           (uint8_t) (arg >> 24), (uint8_t) ((arg >> 16) & 0xff),
-                           (uint8_t) ((arg >> 8) & 0xff), (uint8_t) (arg & 0xff)});
+  send_command(STREAM, STREAM_Play,
+               { (uint8_t) mode,
+                   (uint8_t) (arg >> 24), (uint8_t) ((arg >> 16) & 0xff),
+                   (uint8_t) ((arg >> 8) & 0xff), (uint8_t) (arg & 0xff)});
 }
 
 void
@@ -346,7 +346,7 @@ Radio::show_status()
   if (_program_name.length()) {
     cout << "Program Name: " << _program_name << endl;
   }
-  if (_program_name.length()) {
+  if (_program_text.length()) {
     cout << "Program Text: " << _program_text << endl;
   }
 }
@@ -373,7 +373,6 @@ Radio::handle_status()
   if (payload[2] & 0x02) {
     auto response = send_command(STREAM, STREAM_GetProgramText);
     if (response->command() == STREAM_GetProgramText) {
-      cout << "Response: " << *response << endl;
       _program_text = convert_string(response->payload(), response->payload_length());
       show_status();
     } else {
